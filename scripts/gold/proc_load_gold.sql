@@ -33,3 +33,27 @@ LEFT JOIN  silver.erp_cust_az12  AS ca  ON ci.cst_key = ca.cid
 LEFT JOIN  silver.erp_loc_a101   AS la  ON ci.cst_key = la.cid;
 
 GO
+
+    IF OBJECT_ID('gold.dim_products', 'V') IS NOT NULL
+    DROP VIEW gold.dim_products;
+GO
+    
+CREATE VIEW gold.dim_products AS
+    
+SELECT
+     ROW_NUMBER() OVER (ORDER BY pn.prd_id)  AS product_key
+    ,pn.prd_id                                AS product_id
+    ,pn.cat_id                                AS category_id        -- was: categoery_id
+    ,pc.CAT                                   AS product_category   -- was: product_categorey
+    ,pc.SUBCAT                                AS product_subcategory -- was: product_subcategorey
+    ,pc.MAINTENANCE                           AS product_maintenance -- was: product_minataince
+    ,pn.prd_key                               AS product_number     -- ⚠ was: product_id (duplicate!)
+    ,pn.prd_nm                                AS product_name
+    ,pn.prd_cost                              AS product_cost
+    ,pn.prd_line                              AS product_line
+    ,pn.prd_start_dt                          AS product_start_date
+    ,pn.prd_end_dt                            AS product_end_date
+FROM [DataWareHouse].[silver].[crm_prd_info] pn
+LEFT JOIN silver.erp_px_cat_g1v2 pc
+    ON pc.ID = pn.cat_id
+WHERE pn.prd_end_dt IS NULL;
